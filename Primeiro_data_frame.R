@@ -14,3 +14,6 @@ head(df_teste)
 dim(df_teste)
 sumary(df_teste)
 0
+
+
+nome <- "luiz"
