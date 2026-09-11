@@ -81,3 +81,13 @@ abline(v = mean(notas$Pratica),
 # 3 a turma teve um melhor desempenho na entrega 2
 # 4 a entrega 1 apresenta uma maior desigualdade
 
+
+
+notas$final <- round((notas$Entrega.01 +
+                        notas$Entrega.02 +
+                        notas$Entrega.03 +
+                      notas$Integrada +
+                        notas$Pratica) / 5, 2)
+
+
+View(notas$final)
