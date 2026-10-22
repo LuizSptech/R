@@ -1,4 +1,5 @@
 library(ggplot2)
+library(corrplot)
 
 #EXTRACT
 jogos_E <- games
@@ -9,18 +10,21 @@ jogos_T <- jogos_T[, -1]
 jogos_T <- jogos_T[!duplicated(jogos_T), ]     
 jogos_T[jogos_T == ""] <- NA
 jogos_T <- na.omit(jogos_T)
-
 nrow(jogos_T)
 # transforma "3.9K" em 3900
 converte_k <- function(x) {
   x <- trimws(as.character(x))
-  as.numeric(gsub("K", "", x)) * ifelse(grepl("K", x), 1000, 1)
+  numeros <- as.numeric(gsub("[Kk]", "", x))
+  multiplicador <- ifelse(grepl("[Kk]", x), 1000, 1)
+  return(round(numeros * multiplicador))
 }
-jogos_T$Plays             <- converte_k(jogos_T$Plays)
-jogos_T$Backlogs          <- converte_k(jogos_T$Backlogs)
-jogos_T$Wishlist          <- converte_k(jogos_T$Wishlist)
-jogos_T$Number.of.Reviews <- converte_k(jogos_T$Number.of.Reviews)
 
+colunas_k <- c("Times.Listed", "Number.of.Reviews", "Plays",
+               "Playing", "Backlogs", "Wishlist")
+
+jogos_T[colunas_k] <- lapply(jogos_T[colunas_k], converte_k)
+
+str(jogos_T[colunas_k])   # todas devem aparecer como num
 
 
 jogos_T$Razao <- jogos_T$Wishlist / jogos_T$Plays
@@ -80,6 +84,7 @@ summary(m2)
 summary(m3)
 
 
+
 #usar as reviews como um termômetro, não como garantia 
 #Passar de 1.000 reviews é um bom sinal de qualidade. Abaixo disso, o volume diz pouco, e vale olhar também o gênero e o conteúdo dos reviews.
 
@@ -94,5 +99,27 @@ summary(m3)
 #Não tomar plays como medida de qualidade.
 #Com R² de 0,02, ser muito jogado não significa ser bem avaliado.
 
+#////////////////////////////////////////////////////////////////////////////////////////////////////
+
+# MATRIZ DE CORRELAÇÃO
+colunas_num <- c("Rating", "Number.of.Reviews", "Plays", "Backlogs", "Wishlist")
+matriz_cor <- cor(jogos_L[, colunas_num])
+corrplot(matriz_cor, method = "color", addCoef.col = "black")
+
+# R² DOS MODELOS
+summary(m1)$r.squared
+summary(m2)$r.squared
+summary(m3)$r.squared
+
+# EXPLICAÇÃO
+# Reviews e Plays têm correlação forte (0.81) e o R² de m1 é 0.66:
+# o nº de reviews explica cerca de 66% da variação dos plays.
+# Wishlist e Backlogs também têm correlação forte (0.81) e o R² de m2 é 0.65.
+# Já Rating e Plays têm correlação fraca (≈0.15) e R² de m3 de só ≈0.02:
+# ser muito jogado quase não explica a nota do jogo.
+
+# CONCLUSÃO
+# A popularidade (reviews e wishlist) explica bem a demanda (plays e backlogs),
+# mas não explica a qualidade (nota). Correlação não prova causa e efeito.
 
 
